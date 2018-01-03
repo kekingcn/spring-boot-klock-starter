@@ -5,6 +5,7 @@ import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.klock.annotation.Klock;
 import org.springframework.boot.autoconfigure.klock.core.LockInfoProvider;
 import org.springframework.boot.autoconfigure.klock.model.LockInfo;
 import org.springframework.boot.autoconfigure.klock.model.LockType;
@@ -38,8 +39,8 @@ public class LockFactory  {
         logger.info("Klock Initialization Successful");
     }
 
-    public Lock getLock(ProceedingJoinPoint joinPoint){
-        LockInfo lockInfo = lockInfoProvider.get(joinPoint);
+    public Lock getLock(ProceedingJoinPoint joinPoint, Klock klock){
+        LockInfo lockInfo = lockInfoProvider.get(joinPoint,klock);
         return lockMap.get(lockInfo.getType()).setLockInfo(lockInfo);
     }
 

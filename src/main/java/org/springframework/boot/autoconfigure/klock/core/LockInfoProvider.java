@@ -20,32 +20,14 @@ public class LockInfoProvider {
     @Autowired
     private KlockConfig klockConfig;
 
-    public LockInfo get(ProceedingJoinPoint joinPoint) {
+    public LockInfo get(ProceedingJoinPoint joinPoint,Klock klock) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Method method = getMethod(joinPoint, signature);
-        Klock annotation = method.getAnnotation(Klock.class);
-        LockType type= annotation.lockType();
-        String name = LOCK_NAME_PREFIX+LOCK_NAME_SEPARATOR+getName(annotation.name(), signature);
-        long waitTime = getWaitTime(annotation);
-        long leaseTime = getLeaseTime(annotation);
+        LockType type= klock.lockType();
+        String name = LOCK_NAME_PREFIX+LOCK_NAME_SEPARATOR+getName(klock.name(), signature);
+        long waitTime = getWaitTime(klock);
+        long leaseTime = getLeaseTime(klock);
         return new LockInfo(type,name,waitTime,leaseTime);
     }
-
-    private Method getMethod(ProceedingJoinPoint joinPoint, MethodSignature signature) {
-        Method method = signature.getMethod();
-
-        if (method.getDeclaringClass().isInterface()) {
-            try {
-                method = joinPoint.getTarget().getClass().getDeclaredMethod(signature.getName(),
-                        method.getParameterTypes());
-            } catch (SecurityException | NoSuchMethodException e) {
-                throw new RuntimeException("Unable to get target method");
-            }
-        }
-
-        return method;
-    }
-
 
     private String getName(String annotationName, MethodSignature signature) {
         if (annotationName.isEmpty()) {
