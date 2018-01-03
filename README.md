@@ -52,6 +52,8 @@ public class TestService {
     spring.klock.database ：redis数据索引
     spring.klock.waitTime ：获取锁最长阻塞时间（默认：60，单位：秒）
     spring.klock.leaseTime：已获取锁后自动释放时间（默认：60，单位：秒）
+    spring.klock.cluster-server.node-addresses ：redis集群配置 如 redis://192.168.1.204:6379,redis://192.168.1.201:6379
+    spring.klock.address 和 spring.klock.cluster-server.node-addresses 选其一即可
 ```
 > @Klock注解参数说明
 ```
