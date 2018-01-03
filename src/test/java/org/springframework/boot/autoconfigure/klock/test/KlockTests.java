@@ -32,6 +32,15 @@ public class KlockTests {
 		String result=testService.getValue("noSleep");
 		Assert.assertEquals(result,"success");
 	}
+	/**
+	 *不休眠
+	 * @throws Exception
+	 */
+	@Test
+	public void jvm3()throws Exception{
+		String result=testService.getValue("noSleep");
+		Assert.assertEquals(result,"success");
+	}
 	//先后启动jvm1 和 jvm 2两个测试用例，会发现虽然 jvm2没休眠,因为getValue加锁了，
 	// 所以只要jvm1拿到锁就基本同时完成
 }
