@@ -36,9 +36,14 @@ public class KlockAutoConfiguration {
     @ConditionalOnMissingBean
     RedissonClient redisson() throws Exception {
         Config config = new Config();
-        config.useSingleServer().setAddress(klockConfig.getAddress())
-                .setDatabase(klockConfig.getDatabase())
-                .setPassword(klockConfig.getPassword());
+        if(klockConfig.getClusterServer()!=null){
+            config.useClusterServers().setPassword(klockConfig.getPassword())
+                    .addNodeAddress(klockConfig.getClusterServer().getNodeAddresses());
+        }else {
+            config.useSingleServer().setAddress(klockConfig.getAddress())
+                    .setDatabase(klockConfig.getDatabase())
+                    .setPassword(klockConfig.getPassword());
+        }
         Codec codec=(Codec) ClassUtils.forName(klockConfig.getCodec(),ClassUtils.getDefaultClassLoader()).newInstance();
         config.setCodec(codec);
         config.setEventLoopGroup(new NioEventLoopGroup());

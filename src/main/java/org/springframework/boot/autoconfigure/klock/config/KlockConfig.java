@@ -13,6 +13,7 @@ public class KlockConfig {
     private String address;
     private String password;
     private int database=15;
+    private ClusterServer clusterServer;
     private String codec = "org.redisson.codec.JsonJacksonCodec";
     //lock
     private long waitTime = 60;
@@ -64,5 +65,26 @@ public class KlockConfig {
 
     public void setDatabase(int database) {
         this.database = database;
+    }
+
+    public ClusterServer getClusterServer() {
+        return clusterServer;
+    }
+
+    public void setClusterServer(ClusterServer clusterServer) {
+        this.clusterServer = clusterServer;
+    }
+
+    public static class ClusterServer{
+
+        private String[] nodeAddresses;
+
+        public String[] getNodeAddresses() {
+            return nodeAddresses;
+        }
+
+        public void setNodeAddresses(String[] nodeAddresses) {
+            this.nodeAddresses = nodeAddresses;
+        }
     }
 }
