@@ -33,7 +33,9 @@ public class FairLock implements Lock {
 
     @Override
     public void release() {
-         rLock.unlock();
+        if(rLock.isHeldByCurrentThread()){
+            rLock.unlockAsync();
+        }
     }
 
     public Lock setLockInfo(LockInfo lockInfo) {

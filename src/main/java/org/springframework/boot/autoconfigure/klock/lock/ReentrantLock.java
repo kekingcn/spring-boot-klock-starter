@@ -32,7 +32,10 @@ public class ReentrantLock implements Lock {
 
     @Override
     public void release() {
-         rLock.unlock();
+        if(rLock.isHeldByCurrentThread()){
+            rLock.unlockAsync();
+        }
+
     }
 
     public LockInfo getLockInfo() {

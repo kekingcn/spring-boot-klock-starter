@@ -33,7 +33,9 @@ public class WriteLock implements Lock {
 
     @Override
     public void release() {
-         rLock.writeLock().unlock();
+        if(rLock.writeLock().isHeldByCurrentThread()){
+            rLock.writeLock().unlockAsync();
+        }
     }
 
     public LockInfo getLockInfo() {

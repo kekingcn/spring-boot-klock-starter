@@ -33,7 +33,9 @@ public class ReadLock implements Lock {
 
     @Override
     public void release() {
-         rLock.readLock().unlock();
+        if(rLock.readLock().isHeldByCurrentThread()){
+            rLock.readLock().unlockAsync();
+        }
     }
     public LockInfo getLockInfo() {
         return lockInfo;
