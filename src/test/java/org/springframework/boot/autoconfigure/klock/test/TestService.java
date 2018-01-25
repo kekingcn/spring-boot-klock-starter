@@ -1,7 +1,7 @@
 package org.springframework.boot.autoconfigure.klock.test;
 
 import org.springframework.boot.autoconfigure.klock.annotation.Klock;
-import org.springframework.boot.autoconfigure.klock.model.LockType;
+import org.springframework.boot.autoconfigure.klock.annotation.KlockKey;
 import org.springframework.stereotype.Service;
 
 /**
@@ -17,4 +17,17 @@ public class TestService {
         }
         return "success";
     }
+
+    @Klock(keys = {"#userId"})
+    public String getValue(String userId,@KlockKey int id)throws Exception{
+        Thread.sleep(60*1000);
+        return "success";
+    }
+
+    @Klock(keys = {"#user.name","#user.id"})
+    public String getValue(User user)throws Exception{
+        Thread.sleep(60*1000);
+        return "success";
+    }
+
 }

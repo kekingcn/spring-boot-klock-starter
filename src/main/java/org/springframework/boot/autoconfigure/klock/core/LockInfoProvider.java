@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.klock.annotation.Klock;
 import org.springframework.boot.autoconfigure.klock.config.KlockConfig;
 import org.springframework.boot.autoconfigure.klock.model.LockInfo;
-import java.lang.reflect.Method;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.boot.autoconfigure.klock.model.LockType;
 
@@ -17,16 +16,21 @@ public class LockInfoProvider {
     public static final String LOCK_NAME_PREFIX = "lock";
     public static final String LOCK_NAME_SEPARATOR = ".";
 
+
     @Autowired
     private KlockConfig klockConfig;
+
+    @Autowired
+    private BusinessKeyProvider businessKeyProvider;
 
     public LockInfo get(ProceedingJoinPoint joinPoint,Klock klock) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         LockType type= klock.lockType();
-        String name = LOCK_NAME_PREFIX+LOCK_NAME_SEPARATOR+getName(klock.name(), signature);
+        String businessKeyName=businessKeyProvider.getKeyName(joinPoint,klock);
+        String lockName = LOCK_NAME_PREFIX+LOCK_NAME_SEPARATOR+getName(klock.name(), signature)+businessKeyName;
         long waitTime = getWaitTime(klock);
         long leaseTime = getLeaseTime(klock);
-        return new LockInfo(type,name,waitTime,leaseTime);
+        return new LockInfo(type,lockName,waitTime,leaseTime);
     }
 
     private String getName(String annotationName, MethodSignature signature) {
@@ -36,6 +40,7 @@ public class LockInfoProvider {
             return annotationName;
         }
     }
+
 
     private long getWaitTime(Klock lock) {
         return lock.waitTime() == Long.MIN_VALUE ?

@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.klock.config.KlockConfig;
+import org.springframework.boot.autoconfigure.klock.core.BusinessKeyProvider;
 import org.springframework.boot.autoconfigure.klock.core.KlockAspectHandler;
 import org.springframework.boot.autoconfigure.klock.core.LockInfoProvider;
 import org.springframework.boot.autoconfigure.klock.lock.LockFactory;
@@ -53,6 +54,11 @@ public class KlockAutoConfiguration {
     @Bean
     public LockInfoProvider lockInfoProvider(){
         return new LockInfoProvider();
+    }
+
+    @Bean
+    public BusinessKeyProvider businessKeyProvider(){
+        return new BusinessKeyProvider();
     }
 
     @Bean

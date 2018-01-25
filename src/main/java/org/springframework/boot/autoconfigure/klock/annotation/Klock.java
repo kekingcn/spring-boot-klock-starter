@@ -34,4 +34,10 @@ public @interface Klock {
      * @return
      */
     long leaseTime() default Long.MIN_VALUE;
+
+    /**
+     * 自定义业务key
+     * @return
+     */
+     String [] keys() default {};
 }

@@ -76,5 +76,36 @@ public class KlockTests {
 	//先后启动jvm1 和 jvm 2两个测试用例，会发现虽然 jvm2没休眠,因为getValue加锁了，
 	// 所以只要jvm1拿到锁就基本同时完成
 
-
+	/**
+	 * 测试业务key
+	 */
+	@Test
+	public void businessKeyJvm1()throws Exception{
+		String result=testService.getValue("user1",1);
+		Assert.assertEquals(result,"success");
+	}
+	/**
+	 * 测试业务key
+	 */
+	@Test
+	public void businessKeyJvm2()throws Exception{
+		String result=testService.getValue("user1",1);
+		Assert.assertEquals(result,"success");
+	}
+	/**
+	 * 测试业务key
+	 */
+	@Test
+	public void businessKeyJvm3()throws Exception{
+		String result=testService.getValue("user1",2);
+		Assert.assertEquals(result,"success");
+	}
+	/**
+	 * 测试业务key
+	 */
+	@Test
+	public void businessKeyJvm4()throws Exception{
+		String result=testService.getValue(new User(3,"kl"));
+		Assert.assertEquals(result,"success");
+	}
 }
