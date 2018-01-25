@@ -11,6 +11,8 @@ import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.util.StringUtils;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
@@ -33,7 +35,7 @@ public class BusinessKeyProvider {
         keyList.addAll(definitionKeys);
         List<String> parameterKeys = getParameterKey(method.getParameters(), joinPoint.getArgs());
         keyList.addAll(parameterKeys);
-        return strList(keyList);
+        return StringUtils.collectionToDelimitedString(keyList,"","-","");
     }
 
     private Method getMethod(ProceedingJoinPoint joinPoint) {
@@ -77,13 +79,5 @@ public class BusinessKeyProvider {
             }
         }
         return parameterKey;
-    }
-
-    private String strList(List<String> list) {
-        StringBuffer stringBuffer = new StringBuffer("");
-        for (String str : list) {
-            stringBuffer.append("-").append(str);
-        }
-        return stringBuffer.toString();
     }
 }
