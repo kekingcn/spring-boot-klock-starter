@@ -35,6 +35,11 @@ public class TestService {
 
 ```
 
+4. 支持锁指定的业务key，如同一个方法ID入参相同的加锁，其他的放行。业务key的获取支持Spel，具体使用方式如下
+![输入图片说明](https://gitee.com/uploads/images/2018/0125/100452_e5d61dc8_492218.png "屏幕截图.png")
+
+
+
 > spring mvc项目接入
 
 其他步骤和spring boot步骤一样，只需要spring-xx.xml配置中添加KlockAutoConfiguration类扫描即可，如：
