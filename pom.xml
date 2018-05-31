@@ -22,18 +22,6 @@
             <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
-
-    <scm>
-        <url>https://github.com/ctripcorp/apollo</url>
-        <connection>scm:git:git://github.com/ctripcorp/apollo.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/ctripcorp/apollo.git</developerConnection>
-    </scm>
-
-    <issueManagement>
-        <system>github</system>
-        <url>https://github.com/ctripcorp/apollo/issues</url>
-    </issueManagement>
-
     <developers>
         <developer>
             <name>kl</name>
