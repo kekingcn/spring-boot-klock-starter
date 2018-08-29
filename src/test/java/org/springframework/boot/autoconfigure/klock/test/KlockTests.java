@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -23,24 +24,20 @@ public class KlockTests {
 	 */
 	@Test
 	public void multithreadingTest()throws Exception{
-		ExecutorService executorService= Executors.newFixedThreadPool(6);
-		Runnable task=new Runnable() {
-			@Override
-			public void run() {
+		ExecutorService executorService = Executors.newFixedThreadPool(6);
+		int i = 0;
+		while (i < 10) {
+			final int num = i;
+			executorService.submit(() -> {
 				try {
-					String result=testService.getValue("sleep");
-					System.err.println("线程:["+Thread.currentThread().getName()+"]拿到结果=》"+result);
-				}catch (Exception e){
+					String result = testService.getValue("sleep" + num);
+					System.err.println("线程:[" + Thread.currentThread().getName() + "]拿到结果=》" + result + new Date().toLocaleString());
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			}
-		};
-		executorService.submit(task);
-		executorService.submit(task);
-		executorService.submit(task);
-		executorService.submit(task);
-		executorService.submit(task);
-		executorService.submit(task);
+			});
+			i++;
+		}
 		System.in.read();
 	}
 

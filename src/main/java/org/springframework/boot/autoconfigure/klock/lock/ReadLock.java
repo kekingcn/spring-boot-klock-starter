@@ -11,14 +11,15 @@ import java.util.concurrent.TimeUnit;
  */
 public class ReadLock implements Lock {
 
-    private RReadWriteLock rLock;
+    private static volatile RReadWriteLock rLock;
 
-    private LockInfo lockInfo;
+    private final LockInfo lockInfo;
 
     private RedissonClient redissonClient;
 
-    public ReadLock(RedissonClient redissonClient) {
+    public ReadLock(RedissonClient redissonClient,LockInfo info) {
         this.redissonClient = redissonClient;
+        this.lockInfo = info;
     }
 
     @Override
@@ -36,14 +37,5 @@ public class ReadLock implements Lock {
         if(rLock.readLock().isHeldByCurrentThread()){
             rLock.readLock().unlockAsync();
         }
-    }
-    public LockInfo getLockInfo() {
-        return lockInfo;
-    }
-
-    public Lock setLockInfo(LockInfo lockInfo) {
-        this.lockInfo = lockInfo;
-        return this;
-
     }
 }

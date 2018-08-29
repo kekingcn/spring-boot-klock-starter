@@ -11,14 +11,15 @@ import java.util.concurrent.TimeUnit;
  */
 public class WriteLock implements Lock {
 
-    private RReadWriteLock rLock;
+    private static volatile RReadWriteLock rLock;
 
-    private LockInfo lockInfo;
+    private final LockInfo lockInfo;
 
     private RedissonClient redissonClient;
 
-    public WriteLock(RedissonClient redissonClient) {
+    public WriteLock(RedissonClient redissonClient,LockInfo info) {
         this.redissonClient = redissonClient;
+        this.lockInfo = info;
     }
 
     @Override
@@ -36,14 +37,5 @@ public class WriteLock implements Lock {
         if(rLock.writeLock().isHeldByCurrentThread()){
             rLock.writeLock().unlockAsync();
         }
-    }
-
-    public LockInfo getLockInfo() {
-        return lockInfo;
-    }
-
-    public Lock setLockInfo(LockInfo lockInfo) {
-        this.lockInfo = lockInfo;
-        return this;
     }
 }

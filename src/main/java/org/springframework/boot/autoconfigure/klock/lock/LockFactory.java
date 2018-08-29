@@ -28,20 +28,20 @@ public class LockFactory  {
     @Autowired
     private LockInfoProvider lockInfoProvider;
 
-    private static final Map<LockType,Lock> lockMap= new HashMap<>();
-
-    @PostConstruct
-    public void init(){
-        lockMap.put(LockType.Reentrant,new ReentrantLock(redissonClient));
-        lockMap.put(LockType.Fair,new FairLock(redissonClient));
-        lockMap.put(LockType.Read,new ReadLock(redissonClient));
-        lockMap.put(LockType.Write,new WriteLock(redissonClient));
-        logger.info("Klock Initialization Successful");
-    }
-
     public Lock getLock(ProceedingJoinPoint joinPoint, Klock klock){
         LockInfo lockInfo = lockInfoProvider.get(joinPoint,klock);
-        return lockMap.get(lockInfo.getType()).setLockInfo(lockInfo);
+        switch (lockInfo.getType()) {
+            case Reentrant:
+                return new ReentrantLock(redissonClient, lockInfo);
+            case Fair:
+                return new FairLock(redissonClient, lockInfo);
+            case Read:
+                return new ReadLock(redissonClient, lockInfo);
+            case Write:
+                return new WriteLock(redissonClient, lockInfo);
+            default:
+                return new ReentrantLock(redissonClient, lockInfo);
+        }
     }
 
 }

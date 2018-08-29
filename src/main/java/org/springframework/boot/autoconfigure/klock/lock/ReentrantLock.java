@@ -11,19 +11,20 @@ import java.util.concurrent.TimeUnit;
  */
 public class ReentrantLock implements Lock {
 
-    private RLock rLock;
+    private static volatile RLock rLock;
 
-    private LockInfo lockInfo;
+    private final LockInfo lockInfo;
 
     private RedissonClient redissonClient;
 
-    public ReentrantLock(RedissonClient redissonClient) {
+    public ReentrantLock(RedissonClient redissonClient,LockInfo lockInfo) {
         this.redissonClient = redissonClient;
+        this.lockInfo = lockInfo;
     }
     @Override
     public boolean acquire() {
         try {
-            rLock=redissonClient.getLock(lockInfo.getName());
+            rLock = redissonClient.getLock(lockInfo.getName());
             return rLock.tryLock(lockInfo.getWaitTime(), lockInfo.getLeaseTime(), TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             return false;
@@ -37,13 +38,7 @@ public class ReentrantLock implements Lock {
         }
 
     }
-
-    public LockInfo getLockInfo() {
-        return lockInfo;
-    }
-
-    public Lock setLockInfo(LockInfo lockInfo) {
-        this.lockInfo = lockInfo;
-        return this;
+    public String getKey(){
+        return this.lockInfo.getName();
     }
 }

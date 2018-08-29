@@ -11,14 +11,15 @@ import java.util.concurrent.TimeUnit;
  */
 public class FairLock implements Lock {
 
-    private RLock rLock;
+    private static volatile RLock rLock;
     
-    private LockInfo lockInfo;
+    private final LockInfo lockInfo;
 
     private RedissonClient redissonClient;
 
-    public FairLock(RedissonClient redissonClient) {
+    public FairLock(RedissonClient redissonClient,LockInfo info) {
         this.redissonClient = redissonClient;
+        this.lockInfo = info;
     }
 
     @Override
@@ -36,10 +37,5 @@ public class FairLock implements Lock {
         if(rLock.isHeldByCurrentThread()){
             rLock.unlockAsync();
         }
-    }
-
-    public Lock setLockInfo(LockInfo lockInfo) {
-        this.lockInfo = lockInfo;
-        return this;
     }
 }
