@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ReadLock implements Lock {
 
-    private static volatile RReadWriteLock rLock;
+    private  RReadWriteLock rLock;
 
     private final LockInfo lockInfo;
 

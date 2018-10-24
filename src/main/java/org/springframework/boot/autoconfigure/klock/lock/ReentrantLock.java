@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ReentrantLock implements Lock {
 
-    private static volatile RLock rLock;
+    private  RLock rLock;
 
     private final LockInfo lockInfo;
 
