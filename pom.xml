@@ -6,14 +6,14 @@
 
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-klock-starter</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
     <description>The kLock Project</description>
 
     <properties>
         <spring-boot.version>1.5.6.RELEASE</spring-boot.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>1.7</java.version>
+        <java.version>1.8</java.version>
     </properties>
 
     <licenses>
@@ -117,15 +117,13 @@
     </build>
     <!-- distribute目录 -->
     <distributionManagement>
-        <repository>
-            <id>repo</id>
-            <name>User Project Releases</name>
-            <url>http://192.168.1.204:8081/nexus/content/repositories/releases</url>
-        </repository>
         <snapshotRepository>
             <id>repo</id>
-            <name>User Project SNAPSHOTS</name>
-            <url>http://192.168.1.204:8081/nexus/content/repositories/snapshots</url>
+            <url>http://ops.keking.cn:8081/nexus/content/repositories/snapshots</url>
         </snapshotRepository>
+        <repository>
+            <id>repo</id>
+            <url>http://ops.keking.cn:8081/nexus/content/repositories/releases</url>
+        </repository>
     </distributionManagement>
 </project>
