@@ -7,20 +7,21 @@
 > spring boot项目接入
 
 
-1.添加lock starter组件依赖，目前还没上传到公共仓库，需要自己下源码build
+1.添加lock starter组件依赖，~~目前还没上传到公共仓库，需要自己下源码build~~ ，已上传到maven中央仓库
 ```
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-klock-starter</artifactId>
-            <version>1.1-SNAPSHOT</version>
-        </dependency>
+<dependency>
+    <groupId>cn.keking</groupId>
+    <artifactId>spring-boot-klock-starter</artifactId>
+    <version>1.1-RELEASE</version>
+</dependency>
+
 ```
 
 2.application.properties配置redis链接：spring.klock.address=127.0.0.1:6379
 
 
 3.在需要加分布式锁的方法上，添加注解@Klock，如：
-```
+```java
 @Service
 public class TestService {
 
@@ -43,7 +44,7 @@ public class TestService {
 > spring mvc项目接入
 
 其他步骤和spring boot步骤一样，只需要spring-xx.xml配置中添加KlockAutoConfiguration类扫描即可，如：
-```
+```xml
 <context:component-scan base-package="org.springframework.boot.autoconfigure.klock.KlockAutoConfiguration"/>
 ```
 
@@ -51,14 +52,14 @@ public class TestService {
 
 > 配置参数说明
 
-```
-    spring.klock.address  : redis链接地址
-    spring.klock.password ：redis密码
-    spring.klock.database ：redis数据索引
-    spring.klock.waitTime ：获取锁最长阻塞时间（默认：60，单位：秒）
-    spring.klock.leaseTime：已获取锁后自动释放时间（默认：60，单位：秒）
-    spring.klock.cluster-server.node-addresses ：redis集群配置 如 127.0.0.1:7000,127.0.0.1:7001，127.0.0.1:7002
-    spring.klock.address 和 spring.klock.cluster-server.node-addresses 选其一即可
+```properties
+spring.klock.address  : redis链接地址
+spring.klock.password : redis密码
+spring.klock.database : redis数据索引
+spring.klock.waitTime : 获取锁最长阻塞时间（默认：60，单位：秒）
+spring.klock.leaseTime: 已获取锁后自动释放时间（默认：60，单位：秒）
+spring.klock.cluster-server.node-addresses : redis集群配置 如 127.0.0.1:7000,127.0.0.1:7001，127.0.0.1:7002
+spring.klock.address 和 spring.klock.cluster-server.node-addresses 选其一即可
 ```
 > @Klock注解参数说明
 ```
