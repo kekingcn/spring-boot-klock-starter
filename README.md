@@ -10,7 +10,7 @@
 1.添加lock starter组件依赖，~~目前还没上传到公共仓库，需要自己下源码build~~ ，已上传到maven中央仓库
 ```
 <dependency>
-    <groupId>cn.keking</groupId>
+    <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-klock-starter</artifactId>
     <version>1.1-RELEASE</version>
 </dependency>

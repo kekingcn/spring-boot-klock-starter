@@ -7,5 +7,6 @@ public interface Lock {
 
     boolean acquire();
 
-    void release();
+    boolean release();
 }
+

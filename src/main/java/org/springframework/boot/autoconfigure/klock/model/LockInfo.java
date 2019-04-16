@@ -52,4 +52,14 @@ public class LockInfo {
     public void setType(LockType type) {
         this.type = type;
     }
+
+    @Override
+    public String toString() {
+        return "LockInfo{" +
+                "type=" + type +
+                ", name='" + name + '\'' +
+                ", waitTime=" + waitTime +
+                ", leaseTime=" + leaseTime +
+                '}';
+    }
 }

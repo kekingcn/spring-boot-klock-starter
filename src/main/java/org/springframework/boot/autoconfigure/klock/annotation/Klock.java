@@ -1,6 +1,10 @@
 package org.springframework.boot.autoconfigure.klock.annotation;
 
+import org.springframework.boot.autoconfigure.klock.handler.release.AbstractLockTimeoutHandler;
+import org.springframework.boot.autoconfigure.klock.handler.lock.AbstractReleaseTimeoutHandler;
+import org.springframework.boot.autoconfigure.klock.model.LockTimeoutStrategy;
 import org.springframework.boot.autoconfigure.klock.model.LockType;
+import org.springframework.boot.autoconfigure.klock.model.ReleaseTimeoutStrategy;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -40,4 +44,29 @@ public @interface Klock {
      * @return
      */
      String [] keys() default {};
+
+     /**
+     * 加锁超时的处理策略
+     * @return
+     */
+     LockTimeoutStrategy lockTimeout() default LockTimeoutStrategy.NO_OPERATION;
+
+    /**
+     * 自定义加锁超时的处理策略
+     * @return
+     */
+     Class<? extends AbstractLockTimeoutHandler> customLockTimeout() default AbstractLockTimeoutHandler.None.class;
+
+     /**
+     * 释放锁时已超时的处理策略
+     * @return
+     */
+     ReleaseTimeoutStrategy releaseTimeout() default ReleaseTimeoutStrategy.NO_OPERATION;
+
+    /**
+     * 自定义释放锁时已超时的处理策略
+     * @return
+     */
+     Class<? extends AbstractReleaseTimeoutHandler> customReleaseTimeout() default AbstractReleaseTimeoutHandler.None.class;
+
 }

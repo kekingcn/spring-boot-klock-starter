@@ -1,6 +1,8 @@
 package org.springframework.boot.autoconfigure.klock.core;
 
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.klock.annotation.Klock;
 import org.springframework.boot.autoconfigure.klock.config.KlockConfig;
@@ -23,6 +25,8 @@ public class LockInfoProvider {
     @Autowired
     private BusinessKeyProvider businessKeyProvider;
 
+    private static final Logger logger = LoggerFactory.getLogger(LockInfoProvider.class);
+
     public LockInfo get(ProceedingJoinPoint joinPoint,Klock klock) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         LockType type= klock.lockType();
@@ -30,6 +34,13 @@ public class LockInfoProvider {
         String lockName = LOCK_NAME_PREFIX+LOCK_NAME_SEPARATOR+getName(klock.name(), signature)+businessKeyName;
         long waitTime = getWaitTime(klock);
         long leaseTime = getLeaseTime(klock);
+
+        if(leaseTime == -1 && logger.isWarnEnabled()) {
+            logger.warn("Trying to acquire Lock({}) with no expiration, " +
+                        "Klock will keep prolong the lock expiration while the lock is still holding by current thread. " +
+                        "This may cause dead lock in some circumstances.", lockName);
+        }
+
         return new LockInfo(type,lockName,waitTime,leaseTime);
     }
 
