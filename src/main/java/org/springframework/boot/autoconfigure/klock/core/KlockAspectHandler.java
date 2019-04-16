@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.klock.annotation.Klock;
-import org.springframework.boot.autoconfigure.klock.handler.KlockTimeoutException;
 import org.springframework.boot.autoconfigure.klock.handler.lock.AbstractReleaseTimeoutHandler;
 import org.springframework.boot.autoconfigure.klock.handler.release.AbstractLockTimeoutHandler;
 import org.springframework.boot.autoconfigure.klock.lock.Lock;
@@ -18,6 +17,9 @@ import org.springframework.boot.autoconfigure.klock.lock.LockFactory;
 import org.springframework.boot.autoconfigure.klock.model.LockInfo;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by kl on 2017/12/29.
@@ -38,6 +40,10 @@ public class KlockAspectHandler {
 
     private ThreadLocal<Lock> currentThreadLock = new ThreadLocal<>();
     private ThreadLocal<LockRes> currentThreadLockRes = new ThreadLocal<>();
+
+    private Map<Class, AbstractLockTimeoutHandler> lockTimeoutHandlerMap = new ConcurrentHashMap<>();
+    private Map<Class, AbstractReleaseTimeoutHandler> releaseTimeoutHandlerMap = new ConcurrentHashMap<>();
+
 
     @Around(value = "@annotation(klock)")
     public Object around(ProceedingJoinPoint joinPoint, Klock klock) throws Throwable {
@@ -91,12 +97,21 @@ public class KlockAspectHandler {
      */
     private void handleCustomLockTimeout(Class<? extends AbstractLockTimeoutHandler> customLockTimeout, LockInfo lockInfo, Lock lock, JoinPoint joinPoint) {
 
-        AbstractLockTimeoutHandler handler = null;
-        try {
-            handler = customLockTimeout.newInstance();
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Illegal annotation param customLockTimeout",e);
+        AbstractLockTimeoutHandler handler = lockTimeoutHandlerMap.get(customLockTimeout);
+        if(handler == null) {
+            synchronized (customLockTimeout) {
+                handler = lockTimeoutHandlerMap.get(customLockTimeout);
+                if(handler == null) {
+                    try {
+                        handler = customLockTimeout.newInstance();
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("Illegal annotation param customLockTimeout",e);
+                    }
+                    lockTimeoutHandlerMap.put(customLockTimeout,handler);
+                }
+            }
         }
+
         handler.handle(lockInfo, lock, joinPoint);
 
     }
@@ -137,11 +152,20 @@ public class KlockAspectHandler {
 
     private void handleCustomReleaseTimeout(Class<? extends AbstractReleaseTimeoutHandler> customReleaseTimeout, LockInfo lockInfo) {
 
-        AbstractReleaseTimeoutHandler handler = null;
-        try {
-            handler = customReleaseTimeout.newInstance();
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Illegal annotation param customLockTimeout",e);
+        AbstractReleaseTimeoutHandler handler = releaseTimeoutHandlerMap.get(customReleaseTimeout);
+        if(handler == null) {
+
+            synchronized (customReleaseTimeout) {
+                handler = releaseTimeoutHandlerMap.get(customReleaseTimeout);
+                if(handler == null) {
+                    try {
+                        handler = customReleaseTimeout.newInstance();
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("Illegal annotation param customReleaseTimeout",e);
+                    }
+                    releaseTimeoutHandlerMap.put(customReleaseTimeout, handler);
+                }
+            }
         }
 
         handler.handle(lockInfo);
