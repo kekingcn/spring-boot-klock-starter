@@ -72,7 +72,29 @@ lockType：锁的类型，目前支持（可重入锁，公平锁，读写锁）
 waitTime：获取锁最长等待时间。默认为：60s。同时也可通过spring.klock.waitTime统一配置
 
 leaseTime：获得锁后，自动释放锁的时间。默认为：60s。同时也可通过spring.klock.leaseTime统一配置
+
+lockTimeout: 加锁超时的处理策略，可配置为不做处理、快速失败、阻塞等待的处理策略，默认策略为不做处理
+
+customLockTimeout: 自定义加锁超时的处理策略，需继承AbstractLockTimeoutHandler
+
+releaseTimeout: 释放锁时，持有的锁已超时的处理策略，可配置为不做处理、快速失败的处理策略，默认策略为不做处理
+
+customReleaseTimeout: 自定义释放锁时，锁已超时的处理策略，需继承AbstractReleaseTimeoutHandler
 ```
+# 锁超时说明
+因为基于redis实现分布式锁，如果使用不当，会在以下场景下遇到锁超时的问题：
+![锁超时处理逻辑](https://wx1.sinaimg.cn/large/7dfa0a7bly1g24obim6cnj20u80jzgnf.jpg "锁超时处理逻辑.jpg")
+
+加锁超时处理策略：
+1. 不做处理，继续执行业务逻辑
+2. 快速失败，会抛出KlockTimeoutException
+3. 阻塞等待，一直阻塞，直到获得锁，但在太多的尝试后，会停止获取锁并报错
+4. 自定义，通过继承AbstractLockTimeoutHandler可以自定义加锁超时处理逻辑
+
+释放锁时超时处理策略：
+1. 不做处理，继续执行业务逻辑
+2. 快速失败，会抛出KlockTimeoutException
+3. 自定义，通过继承AbstractReleaseTimeoutHandler可以自定义加锁超时处理逻辑
 
 # 关于测试
 工程test模块下，为分布式锁的测试模块。可以快速体验分布式锁的效果。
