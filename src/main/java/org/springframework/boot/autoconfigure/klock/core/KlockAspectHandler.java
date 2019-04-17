@@ -6,20 +6,21 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.klock.annotation.Klock;
-import org.springframework.boot.autoconfigure.klock.handler.lock.AbstractReleaseTimeoutHandler;
-import org.springframework.boot.autoconfigure.klock.handler.release.AbstractLockTimeoutHandler;
+import org.springframework.boot.autoconfigure.klock.handler.KlockInvocationException;
 import org.springframework.boot.autoconfigure.klock.lock.Lock;
 import org.springframework.boot.autoconfigure.klock.lock.LockFactory;
 import org.springframework.boot.autoconfigure.klock.model.LockInfo;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * Created by kl on 2017/12/29.
@@ -41,10 +42,6 @@ public class KlockAspectHandler {
     private ThreadLocal<Lock> currentThreadLock = new ThreadLocal<>();
     private ThreadLocal<LockRes> currentThreadLockRes = new ThreadLocal<>();
 
-    private Map<Class, AbstractLockTimeoutHandler> lockTimeoutHandlerMap = new ConcurrentHashMap<>();
-    private Map<Class, AbstractReleaseTimeoutHandler> releaseTimeoutHandlerMap = new ConcurrentHashMap<>();
-
-
     @Around(value = "@annotation(klock)")
     public Object around(ProceedingJoinPoint joinPoint, Klock klock) throws Throwable {
         LockInfo lockInfo = lockInfoProvider.get(joinPoint,klock);
@@ -53,79 +50,80 @@ public class KlockAspectHandler {
         boolean lockRes = lock.acquire();
 
         if(!lockRes) {
-            handleLockTimeout(klock, lockInfo, lock, joinPoint);
+            if(logger.isWarnEnabled()) {
+                logger.warn("Timeout while acquiring Lock({})", lockInfo.getName());
+            }
+
+            if(!StringUtils.isEmpty(klock.customLockTimeout())) {
+
+                return handleCustomLockTimeout(klock.customLockTimeout(), joinPoint);
+
+            } else {
+                klock.lockTimeout().handle(lockInfo, lock, joinPoint);
+            }
         }
 
         currentThreadLock.set(lock);
         currentThreadLockRes.get().setRes(true);
+
         return joinPoint.proceed();
     }
 
     @AfterReturning(value = "@annotation(klock)")
-    public void afterReturning(Klock klock) {
+    public void afterReturning(JoinPoint joinPoint, Klock klock) throws Throwable {
 
-        releaseLock(klock);
+        releaseLock(klock, joinPoint);
+        cleanUpThreadLocal();
     }
 
     @AfterThrowing(value = "@annotation(klock)", throwing = "ex")
-    public void afterThrowing (Klock klock, Throwable ex) throws Throwable {
-        releaseLock(klock);
+    public void afterThrowing (JoinPoint joinPoint, Klock klock, Throwable ex) throws Throwable {
+        releaseLock(klock, joinPoint);
+
+        cleanUpThreadLocal();
         throw ex;
-    }
-
-    /**
-     * 处理加锁超时
-     */
-    private void handleLockTimeout(Klock klock, LockInfo lockInfo, Lock lock, JoinPoint joinPoint) {
-
-        if(logger.isWarnEnabled()) {
-            logger.warn("Timeout while acquiring Lock({})", lockInfo.getName());
-        }
-
-        if(klock.customLockTimeout() != AbstractLockTimeoutHandler.None.class) {
-
-            handleCustomLockTimeout(klock.customLockTimeout(), lockInfo, lock, joinPoint);
-
-        } else {
-            klock.lockTimeout().handle(lockInfo, lock, joinPoint);
-        }
-
     }
 
     /**
      * 处理自定义加锁超时
      */
-    private void handleCustomLockTimeout(Class<? extends AbstractLockTimeoutHandler> customLockTimeout, LockInfo lockInfo, Lock lock, JoinPoint joinPoint) {
+    private Object handleCustomLockTimeout(String lockTimeoutHandler, JoinPoint joinPoint) throws Throwable {
 
-        AbstractLockTimeoutHandler handler = lockTimeoutHandlerMap.get(customLockTimeout);
-        if(handler == null) {
-            synchronized (customLockTimeout) {
-                handler = lockTimeoutHandlerMap.get(customLockTimeout);
-                if(handler == null) {
-                    try {
-                        handler = customLockTimeout.newInstance();
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException("Illegal annotation param customLockTimeout",e);
-                    }
-                    lockTimeoutHandlerMap.put(customLockTimeout,handler);
-                }
-            }
+        // prepare invocation context
+        Method currentMethod = ((MethodSignature)joinPoint.getSignature()).getMethod();
+        Object target = joinPoint.getTarget();
+        Method handleMethod = null;
+        try {
+            handleMethod = joinPoint.getTarget().getClass().getDeclaredMethod(lockTimeoutHandler, currentMethod.getParameterTypes());
+            handleMethod.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException("Illegal annotation param handleMethodName",e);
+        }
+        Object[] args = joinPoint.getArgs();
+
+        // invoke
+        Object res = null;
+        try {
+            res = handleMethod.invoke(target, args);
+        } catch (IllegalAccessException e) {
+            throw new KlockInvocationException("Fail to invoke custom lock timeout handler: " + lockTimeoutHandler ,e);
+        } catch (InvocationTargetException e) {
+            throw e.getTargetException();
         }
 
-        handler.handle(lockInfo, lock, joinPoint);
-
+        return res;
     }
 
     /**
      *  释放锁
      */
-    private void releaseLock(Klock klock) {
+    private void releaseLock(Klock klock, JoinPoint joinPoint) throws Throwable {
         LockRes lockRes = currentThreadLockRes.get();
         if (lockRes.getRes()) {
             boolean releaseRes = currentThreadLock.get().release();
 
             if (!releaseRes) {
-                handleReleaseTimeout(klock, lockRes.getLockInfo());
+                handleReleaseTimeout(klock, lockRes.getLockInfo(), joinPoint);
             }
         }
     }
@@ -134,15 +132,15 @@ public class KlockAspectHandler {
     /**
      *  处理释放锁时已超时
      */
-    private void handleReleaseTimeout(Klock klock, LockInfo lockInfo) {
+    private void handleReleaseTimeout(Klock klock, LockInfo lockInfo, JoinPoint joinPoint) throws Throwable {
 
         if(logger.isWarnEnabled()) {
             logger.warn("Timeout while release Lock({})", lockInfo.getName());
         }
 
-        if(klock.customReleaseTimeout() != AbstractReleaseTimeoutHandler.None.class) {
+        if(!StringUtils.isEmpty(klock.customReleaseTimeout())) {
 
-            handleCustomReleaseTimeout(klock.customReleaseTimeout(), lockInfo);
+            handleCustomReleaseTimeout(klock.customReleaseTimeout(), joinPoint);
 
         } else {
             klock.releaseTimeout().handle(lockInfo);
@@ -150,25 +148,29 @@ public class KlockAspectHandler {
 
     }
 
-    private void handleCustomReleaseTimeout(Class<? extends AbstractReleaseTimeoutHandler> customReleaseTimeout, LockInfo lockInfo) {
+    /**
+     * 处理自定义释放锁时已超时
+     */
+    private void handleCustomReleaseTimeout(String releaseTimeoutHandler, JoinPoint joinPoint) throws Throwable {
 
-        AbstractReleaseTimeoutHandler handler = releaseTimeoutHandlerMap.get(customReleaseTimeout);
-        if(handler == null) {
-
-            synchronized (customReleaseTimeout) {
-                handler = releaseTimeoutHandlerMap.get(customReleaseTimeout);
-                if(handler == null) {
-                    try {
-                        handler = customReleaseTimeout.newInstance();
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException("Illegal annotation param customReleaseTimeout",e);
-                    }
-                    releaseTimeoutHandlerMap.put(customReleaseTimeout, handler);
-                }
-            }
+        Method currentMethod = ((MethodSignature)joinPoint.getSignature()).getMethod();
+        Object target = joinPoint.getTarget();
+        Method handleMethod = null;
+        try {
+            handleMethod = joinPoint.getTarget().getClass().getDeclaredMethod(releaseTimeoutHandler, currentMethod.getParameterTypes());
+            handleMethod.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException("Illegal annotation param releaseTimeoutHandler",e);
         }
+        Object[] args = joinPoint.getArgs();
 
-        handler.handle(lockInfo);
+        try {
+            handleMethod.invoke(target, args);
+        } catch (IllegalAccessException e) {
+            throw new KlockInvocationException("Fail to invoke custom release timeout handler: " + releaseTimeoutHandler, e);
+        } catch (InvocationTargetException e) {
+            throw e.getTargetException();
+        }
     }
 
     private class LockRes {
@@ -197,5 +199,12 @@ public class KlockAspectHandler {
         void setLockInfo(LockInfo lockInfo) {
             this.lockInfo = lockInfo;
         }
+    }
+
+    // avoid memory leak
+    private void cleanUpThreadLocal() {
+
+        currentThreadLockRes.remove();
+        currentThreadLock.remove();
     }
 }
