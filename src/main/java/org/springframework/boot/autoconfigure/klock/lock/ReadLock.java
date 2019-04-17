@@ -4,6 +4,7 @@ import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.klock.model.LockInfo;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -33,9 +34,17 @@ public class ReadLock implements Lock {
     }
 
     @Override
-    public void release() {
+    public boolean release() {
         if(rLock.readLock().isHeldByCurrentThread()){
-            rLock.readLock().unlockAsync();
+            try {
+                return rLock.readLock().forceUnlockAsync().get();
+            } catch (InterruptedException e) {
+                return false;
+            } catch (ExecutionException e) {
+                return false;
+            }
         }
+
+        return false;
     }
 }

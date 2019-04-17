@@ -4,6 +4,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.klock.model.LockInfo;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -32,11 +33,17 @@ public class ReentrantLock implements Lock {
     }
 
     @Override
-    public void release() {
+    public boolean release() {
         if(rLock.isHeldByCurrentThread()){
-            rLock.unlockAsync();
+            try {
+                return rLock.forceUnlockAsync().get();
+            } catch (InterruptedException e) {
+                return false;
+            } catch (ExecutionException e) {
+                return false;
+            }
         }
-
+        return false;
     }
     public String getKey(){
         return this.lockInfo.getName();
