@@ -54,12 +54,12 @@ public class KlockAspectHandler {
                 logger.warn("Timeout while acquiring Lock({})", lockInfo.getName());
             }
 
-            if(!StringUtils.isEmpty(klock.customLockTimeout())) {
+            if(!StringUtils.isEmpty(klock.customLockTimeoutStrategy())) {
 
-                return handleCustomLockTimeout(klock.customLockTimeout(), joinPoint);
+                return handleCustomLockTimeout(klock.customLockTimeoutStrategy(), joinPoint);
 
             } else {
-                klock.lockTimeout().handle(lockInfo, lock, joinPoint);
+                klock.lockTimeoutStrategy().handle(lockInfo, lock, joinPoint);
             }
         }
 
@@ -97,7 +97,7 @@ public class KlockAspectHandler {
             handleMethod = joinPoint.getTarget().getClass().getDeclaredMethod(lockTimeoutHandler, currentMethod.getParameterTypes());
             handleMethod.setAccessible(true);
         } catch (NoSuchMethodException e) {
-            throw new IllegalArgumentException("Illegal annotation param handleMethodName",e);
+            throw new IllegalArgumentException("Illegal annotation param customLockTimeoutStrategy",e);
         }
         Object[] args = joinPoint.getArgs();
 
@@ -138,12 +138,12 @@ public class KlockAspectHandler {
             logger.warn("Timeout while release Lock({})", lockInfo.getName());
         }
 
-        if(!StringUtils.isEmpty(klock.customReleaseTimeout())) {
+        if(!StringUtils.isEmpty(klock.customReleaseTimeoutStrategy())) {
 
-            handleCustomReleaseTimeout(klock.customReleaseTimeout(), joinPoint);
+            handleCustomReleaseTimeout(klock.customReleaseTimeoutStrategy(), joinPoint);
 
         } else {
-            klock.releaseTimeout().handle(lockInfo);
+            klock.releaseTimeoutStrategy().handle(lockInfo);
         }
 
     }
@@ -160,7 +160,7 @@ public class KlockAspectHandler {
             handleMethod = joinPoint.getTarget().getClass().getDeclaredMethod(releaseTimeoutHandler, currentMethod.getParameterTypes());
             handleMethod.setAccessible(true);
         } catch (NoSuchMethodException e) {
-            throw new IllegalArgumentException("Illegal annotation param releaseTimeoutHandler",e);
+            throw new IllegalArgumentException("Illegal annotation param customReleaseTimeoutStrategy",e);
         }
         Object[] args = joinPoint.getArgs();
 

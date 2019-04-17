@@ -18,7 +18,7 @@ public class TimeoutService {
 
     private static final Logger logger = LoggerFactory.getLogger(TimeoutService.class);
 
-    @Klock(name="foo-service", leaseTime=-1, releaseTimeout = ReleaseTimeoutStrategy.FAIL_FAST)
+    @Klock(name="foo-service", leaseTime=-1, releaseTimeoutStrategy = ReleaseTimeoutStrategy.FAIL_FAST)
     public void foo1() {
         try {
             logger.info("foo1 acquire lock");
@@ -28,7 +28,7 @@ public class TimeoutService {
         }
     }
 
-    @Klock(name="foo-service", waitTime=2, lockTimeout = LockTimeoutStrategy.FAIL_FAST)
+    @Klock(name="foo-service", waitTime=2, lockTimeoutStrategy = LockTimeoutStrategy.FAIL_FAST)
     public void foo2() {
         try {
             logger.info("acquire lock");
@@ -38,7 +38,7 @@ public class TimeoutService {
         }
     }
 
-    @Klock(name="foo-service", waitTime=2, lockTimeout = LockTimeoutStrategy.KEEP_ACQUIRE)
+    @Klock(name="foo-service", waitTime=2, lockTimeoutStrategy = LockTimeoutStrategy.KEEP_ACQUIRE)
     public void foo3() {
         try {
             TimeUnit.SECONDS.sleep(2);
@@ -50,7 +50,7 @@ public class TimeoutService {
 
     @Klock(name="foo-service",
             waitTime=2,
-            customLockTimeout = "customLockTimeout")
+            customLockTimeoutStrategy = "customLockTimeoutStrategy")
     public String foo4(String foo, String bar) {
         try {
             TimeUnit.SECONDS.sleep(2);
@@ -64,7 +64,7 @@ public class TimeoutService {
 
     private String customLockTimeout(String foo, String bar) {
 
-        logger.info("customLockTimeout foo: " + foo + " bar: " + bar);
+        logger.info("customLockTimeoutStrategy foo: " + foo + " bar: " + bar);
         return "custom foo: " + foo + " bar: " + bar;
     }
 
@@ -89,7 +89,7 @@ public class TimeoutService {
         }
     }
 
-    @Klock(name="foo-service", leaseTime=1, waitTime = 10000, releaseTimeout = ReleaseTimeoutStrategy.FAIL_FAST)
+    @Klock(name="foo-service", leaseTime=1, waitTime = 10000, releaseTimeoutStrategy = ReleaseTimeoutStrategy.FAIL_FAST)
     public void foo7(String foo, String bar) {
         try {
             TimeUnit.SECONDS.sleep(2);
@@ -100,7 +100,7 @@ public class TimeoutService {
     }
 
 
-    @Klock(name="foo-service", leaseTime=1, waitTime = 10000, customReleaseTimeout = "customReleaseTimeout")
+    @Klock(name="foo-service", leaseTime=1, waitTime = 10000, customReleaseTimeoutStrategy = "customReleaseTimeoutStrategy")
     public String foo8(String foo, String bar) {
         try {
             TimeUnit.SECONDS.sleep(2);
@@ -112,6 +112,6 @@ public class TimeoutService {
 
     private String customReleaseTimeout(String foo, String bar) {
 
-        throw new IllegalStateException("customReleaseTimeout");
+        throw new IllegalStateException("customReleaseTimeoutStrategy");
     }
 }

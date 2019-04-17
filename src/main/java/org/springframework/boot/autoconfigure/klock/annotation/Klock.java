@@ -47,24 +47,24 @@ public @interface Klock {
      * 加锁超时的处理策略
      * @return
      */
-     LockTimeoutStrategy lockTimeout() default LockTimeoutStrategy.NO_OPERATION;
+     LockTimeoutStrategy lockTimeoutStrategy() default LockTimeoutStrategy.NO_OPERATION;
 
     /**
      * 自定义加锁超时的处理策略
      * @return
      */
-     String customLockTimeout() default "";
+     String customLockTimeoutStrategy() default "";
 
      /**
      * 释放锁时已超时的处理策略
      * @return
      */
-     ReleaseTimeoutStrategy releaseTimeout() default ReleaseTimeoutStrategy.NO_OPERATION;
+     ReleaseTimeoutStrategy releaseTimeoutStrategy() default ReleaseTimeoutStrategy.NO_OPERATION;
 
     /**
      * 自定义释放锁时已超时的处理策略
      * @return
      */
-     String customReleaseTimeout() default "";
+     String customReleaseTimeoutStrategy() default "";
 
 }
