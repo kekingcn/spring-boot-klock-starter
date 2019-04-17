@@ -50,7 +50,7 @@ public class TimeoutService {
 
     @Klock(name="foo-service",
             waitTime=2,
-            customLockTimeoutStrategy = "customLockTimeoutStrategy")
+            customLockTimeoutStrategy = "customLockTimeout")
     public String foo4(String foo, String bar) {
         try {
             TimeUnit.SECONDS.sleep(2);
@@ -64,7 +64,7 @@ public class TimeoutService {
 
     private String customLockTimeout(String foo, String bar) {
 
-        logger.info("customLockTimeoutStrategy foo: " + foo + " bar: " + bar);
+        logger.info("customLockTimeout foo: " + foo + " bar: " + bar);
         return "custom foo: " + foo + " bar: " + bar;
     }
 
@@ -100,7 +100,7 @@ public class TimeoutService {
     }
 
 
-    @Klock(name="foo-service", leaseTime=1, waitTime = 10000, customReleaseTimeoutStrategy = "customReleaseTimeoutStrategy")
+    @Klock(name="foo-service", leaseTime=1, waitTime = 10000, customReleaseTimeoutStrategy = "customReleaseTimeout")
     public String foo8(String foo, String bar) {
         try {
             TimeUnit.SECONDS.sleep(2);
@@ -112,6 +112,6 @@ public class TimeoutService {
 
     private String customReleaseTimeout(String foo, String bar) {
 
-        throw new IllegalStateException("customReleaseTimeoutStrategy");
+        throw new IllegalStateException("customReleaseTimeout");
     }
 }

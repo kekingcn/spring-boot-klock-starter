@@ -78,8 +78,8 @@ public class KlockAspectHandler {
 
     @AfterThrowing(value = "@annotation(klock)", throwing = "ex")
     public void afterThrowing (JoinPoint joinPoint, Klock klock, Throwable ex) throws Throwable {
-        releaseLock(klock, joinPoint);
 
+        releaseLock(klock, joinPoint);
         cleanUpThreadLocal();
         throw ex;
     }
@@ -121,7 +121,8 @@ public class KlockAspectHandler {
         LockRes lockRes = currentThreadLockRes.get();
         if (lockRes.getRes()) {
             boolean releaseRes = currentThreadLock.get().release();
-
+            // avoid release lock twice when exception happens below
+            lockRes.setRes(false);
             if (!releaseRes) {
                 handleReleaseTimeout(klock, lockRes.getLockInfo(), joinPoint);
             }
