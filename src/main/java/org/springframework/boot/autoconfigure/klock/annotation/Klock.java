@@ -18,52 +18,52 @@ import java.lang.annotation.Target;
 public @interface Klock {
     /**
      * 锁的名称
-     * @return
+     * @return name
      */
     String name() default "";
     /**
      * 锁类型，默认可重入锁
-     * @return
+     * @return lockType
      */
     LockType lockType() default LockType.Reentrant;
     /**
      * 尝试加锁，最多等待时间
-     * @return
+     * @return waitTime
      */
     long waitTime() default Long.MIN_VALUE;
     /**
      *上锁以后xxx秒自动解锁
-     * @return
+     * @return leaseTime
      */
     long leaseTime() default Long.MIN_VALUE;
 
     /**
      * 自定义业务key
-     * @return
+     * @return keys
      */
      String [] keys() default {};
 
      /**
      * 加锁超时的处理策略
-     * @return
+     * @return lockTimeoutStrategy
      */
      LockTimeoutStrategy lockTimeoutStrategy() default LockTimeoutStrategy.NO_OPERATION;
 
     /**
      * 自定义加锁超时的处理策略
-     * @return
+     * @return customLockTimeoutStrategy
      */
      String customLockTimeoutStrategy() default "";
 
      /**
      * 释放锁时已超时的处理策略
-     * @return
+     * @return releaseTimeoutStrategy
      */
      ReleaseTimeoutStrategy releaseTimeoutStrategy() default ReleaseTimeoutStrategy.NO_OPERATION;
 
     /**
      * 自定义释放锁时已超时的处理策略
-     * @return
+     * @return customReleaseTimeoutStrategy
      */
      String customReleaseTimeoutStrategy() default "";
 

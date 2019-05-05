@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @Author wanglaomo
- * @Date 2019/4/16
+ * @author wanglaomo
+ * @since 2019/4/16
  **/
 @Service
 public class TimeoutService {
