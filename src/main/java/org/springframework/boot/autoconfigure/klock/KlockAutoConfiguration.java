@@ -8,6 +8,7 @@ import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.klock.config.KlockConfig;
 import org.springframework.boot.autoconfigure.klock.core.BusinessKeyProvider;
@@ -25,6 +26,7 @@ import org.springframework.util.ClassUtils;
  * Content :klock自动装配
  */
 @Configuration
+@ConditionalOnProperty(KlockConfig.PREFIX)
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 @EnableConfigurationProperties(KlockConfig.class)
 @Import({KlockAspectHandler.class})
