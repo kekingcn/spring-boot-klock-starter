@@ -3,6 +3,7 @@ package org.springframework.boot.autoconfigure.klock.test;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.klock.handler.KlockTimeoutException;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -262,12 +263,13 @@ public class KlockTests {
 		timeoutService.foo7("foo", "bar");
 	}
 
+	@Autowired
+	private RedissonClient client;
 	/**
 	 * 测试释放锁时已超时，自定义策略
 	 */
 	@Test
-	public void releaseTimeoutCustom() {
-
+	public void releaseTimeoutCustom(){
 		exception.expect(IllegalStateException.class);
 		timeoutService.foo8("foo", "bar");
 	}

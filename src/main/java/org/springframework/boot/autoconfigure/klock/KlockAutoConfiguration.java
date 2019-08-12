@@ -22,11 +22,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.util.ClassUtils;
 
 /**
- * Created by kl on 2017/12/29.
+ *
+ * @author kl
+ * @date 2017/12/29
  * Content :klock自动装配
  */
 @Configuration
-@ConditionalOnProperty(KlockConfig.PREFIX)
+@ConditionalOnProperty(prefix = KlockConfig.PREFIX, name = "enable", havingValue = "true", matchIfMissing = true)
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 @EnableConfigurationProperties(KlockConfig.class)
 @Import({KlockAspectHandler.class})

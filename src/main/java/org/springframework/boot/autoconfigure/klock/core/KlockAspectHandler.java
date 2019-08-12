@@ -39,39 +39,41 @@ public class KlockAspectHandler {
     @Autowired
     private LockInfoProvider lockInfoProvider;
 
-    private ThreadLocal<Lock> currentThreadLock = new ThreadLocal<>();
-    private ThreadLocal<LockRes> currentThreadLockRes = new ThreadLocal<>();
+    private ThreadLocal<LockRes> currentThreadLock = new ThreadLocal<>();
+
 
     @Around(value = "@annotation(klock)")
     public Object around(ProceedingJoinPoint joinPoint, Klock klock) throws Throwable {
         LockInfo lockInfo = lockInfoProvider.get(joinPoint,klock);
-        currentThreadLockRes.set(new LockRes(lockInfo, false));
+        currentThreadLock.set(new LockRes(lockInfo, false));
         Lock lock = lockFactory.getLock(lockInfo);
         boolean lockRes = lock.acquire();
 
+        //如果获取锁失败了，则进入失败的处理逻辑
         if(!lockRes) {
             if(logger.isWarnEnabled()) {
                 logger.warn("Timeout while acquiring Lock({})", lockInfo.getName());
             }
-
+            //如果自定义了获取锁失败的处理策略，则执行自定义的降级处理策略
             if(!StringUtils.isEmpty(klock.customLockTimeoutStrategy())) {
 
                 return handleCustomLockTimeout(klock.customLockTimeoutStrategy(), joinPoint);
 
             } else {
+                //否则执行预定义的执行策略
+                //注意：如果没有指定预定义的策略，默认的策略为静默啥不做处理
                 klock.lockTimeoutStrategy().handle(lockInfo, lock, joinPoint);
             }
         }
 
-        currentThreadLock.set(lock);
-        currentThreadLockRes.get().setRes(true);
+        currentThreadLock.get().setLock(lock);
+        currentThreadLock.get().setRes(true);
 
         return joinPoint.proceed();
     }
 
     @AfterReturning(value = "@annotation(klock)")
     public void afterReturning(JoinPoint joinPoint, Klock klock) throws Throwable {
-
         releaseLock(klock, joinPoint);
         cleanUpThreadLocal();
     }
@@ -118,9 +120,9 @@ public class KlockAspectHandler {
      *  释放锁
      */
     private void releaseLock(Klock klock, JoinPoint joinPoint) throws Throwable {
-        LockRes lockRes = currentThreadLockRes.get();
+        LockRes lockRes = currentThreadLock.get();
         if (lockRes.getRes()) {
-            boolean releaseRes = currentThreadLock.get().release();
+            boolean releaseRes = currentThreadLock.get().getLock().release();
             // avoid release lock twice when exception happens below
             lockRes.setRes(false);
             if (!releaseRes) {
@@ -177,7 +179,7 @@ public class KlockAspectHandler {
     private class LockRes {
 
         private LockInfo lockInfo;
-
+        private Lock lock;
         private Boolean res;
 
         LockRes(LockInfo lockInfo, Boolean res) {
@@ -187,6 +189,14 @@ public class KlockAspectHandler {
 
         LockInfo getLockInfo() {
             return lockInfo;
+        }
+
+        public Lock getLock() {
+            return lock;
+        }
+
+        public void setLock(Lock lock) {
+            this.lock = lock;
         }
 
         Boolean getRes() {
@@ -204,8 +214,6 @@ public class KlockAspectHandler {
 
     // avoid memory leak
     private void cleanUpThreadLocal() {
-
-        currentThreadLockRes.remove();
         currentThreadLock.remove();
     }
 }

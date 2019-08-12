@@ -10,7 +10,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created by kl on 2017/12/29.
+ *
+ * @author kl
+ * @date 2017/12/29
  * Content :加锁注解
  */
 @Target(value = {ElementType.METHOD})
