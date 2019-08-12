@@ -14,6 +14,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = KlockTestApplication.class)
@@ -35,20 +36,15 @@ public class KlockTests {
 	@Test
 	public void multithreadingTest()throws Exception{
 		ExecutorService executorService = Executors.newFixedThreadPool(6);
-		int i = 0;
-		while (i < 10) {
-			final int num = i;
-			executorService.submit(() -> {
-				try {
-					String result = testService.getValue("sleep" + num);
-					System.err.println("线程:[" + Thread.currentThread().getName() + "]拿到结果=》" + result + new Date().toLocaleString());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			});
-			i++;
-		}
-		executorService.awaitTermination(5, TimeUnit.SECONDS);
+		IntStream.range(0,10).forEach(i-> executorService.submit(() -> {
+			try {
+				String result = testService.getValue("sleep");
+				System.err.println("线程:[" + Thread.currentThread().getName() + "]拿到结果=》" + result + new Date().toLocaleString());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}));
+		executorService.awaitTermination(30, TimeUnit.SECONDS);
 	}
 
 
@@ -132,12 +128,7 @@ public class KlockTests {
 
 		ExecutorService executorService = Executors.newFixedThreadPool(10);
 
-		executorService.submit(new Runnable() {
-			@Override
-			public void run() {
-				timeoutService.foo1();
-			}
-		});
+		executorService.submit(() -> timeoutService.foo1());
 
 		TimeUnit.MILLISECONDS.sleep(1000);
 
@@ -158,20 +149,16 @@ public class KlockTests {
 		CountDownLatch endLatch = new CountDownLatch(10);
 
 		for(int i=0; i<10; i++) {
-			executorService.submit(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						startLatch.await();
-						timeoutService.foo3();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					} finally {
-						endLatch.countDown();
-					}
+			executorService.submit(() -> {
+				try {
+					startLatch.await();
+					timeoutService.foo3();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} finally {
+					endLatch.countDown();
 				}
 			});
-
 		}
 
 		long start = System.currentTimeMillis();
@@ -191,20 +178,14 @@ public class KlockTests {
 		ExecutorService executorService = Executors.newFixedThreadPool(10);
 		CountDownLatch latch = new CountDownLatch(2);
 
-		executorService.submit(new Runnable() {
-			@Override
-			public void run() {
-				timeoutService.foo1();
-				latch.countDown();
-			}
+		executorService.submit(() -> {
+			timeoutService.foo1();
+			latch.countDown();
 		});
 
-		executorService.submit(new Runnable() {
-			@Override
-			public void run() {
-				timeoutService.foo4("foo", "bar");
-				latch.countDown();
-			}
+		executorService.submit(() -> {
+			timeoutService.foo4("foo", "bar");
+			latch.countDown();
 		});
 
 		latch.await();
@@ -221,17 +202,14 @@ public class KlockTests {
 		CountDownLatch endLatch = new CountDownLatch(10);
 
 		for(int i=0; i<10; i++) {
-			executorService.submit(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						startLatch.await();
-						timeoutService.foo5("foo", "bar");
-					} catch (Exception e) {
-						e.printStackTrace();
-					} finally {
-						endLatch.countDown();
-					}
+			executorService.submit(() -> {
+				try {
+					startLatch.await();
+					timeoutService.foo5("foo", "bar");
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+					endLatch.countDown();
 				}
 			});
 
@@ -262,9 +240,6 @@ public class KlockTests {
 		exception.expect(KlockTimeoutException.class);
 		timeoutService.foo7("foo", "bar");
 	}
-
-	@Autowired
-	private RedissonClient client;
 	/**
 	 * 测试释放锁时已超时，自定义策略
 	 */
