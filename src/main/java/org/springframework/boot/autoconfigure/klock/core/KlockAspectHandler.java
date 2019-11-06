@@ -148,7 +148,7 @@ public class KlockAspectHandler {
      */
     private String getCurrentLockId(JoinPoint joinPoint , Klock klock){
         LockInfo lockInfo = lockInfoProvider.get(joinPoint,klock);
-        String curentLock= Thread.currentThread().getName() + lockInfo.getName();
+        String curentLock= Thread.currentThread().getId() + lockInfo.getName();
         return curentLock;
     }
 
