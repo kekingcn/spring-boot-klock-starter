@@ -1,5 +1,6 @@
 package org.springframework.boot.autoconfigure.klock.core;
 
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,7 @@ public class LockInfoProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(LockInfoProvider.class);
 
-    LockInfo get(ProceedingJoinPoint joinPoint, Klock klock) {
+    LockInfo get(JoinPoint joinPoint, Klock klock) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         LockType type= klock.lockType();
         String businessKeyName=businessKeyProvider.getKeyName(joinPoint,klock);

@@ -1,5 +1,6 @@
 package org.springframework.boot.autoconfigure.klock.core;
 
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.boot.autoconfigure.klock.annotation.Klock;
@@ -28,7 +29,7 @@ public class BusinessKeyProvider {
 
     private ExpressionParser parser = new SpelExpressionParser();
 
-    public String getKeyName(ProceedingJoinPoint joinPoint, Klock klock) {
+    public String getKeyName(JoinPoint joinPoint, Klock klock) {
         List<String> keyList = new ArrayList<>();
         Method method = getMethod(joinPoint);
         List<String> definitionKeys = getSpelDefinitionKey(klock.keys(), method, joinPoint.getArgs());
@@ -38,7 +39,7 @@ public class BusinessKeyProvider {
         return StringUtils.collectionToDelimitedString(keyList,"","-","");
     }
 
-    private Method getMethod(ProceedingJoinPoint joinPoint) {
+    private Method getMethod(JoinPoint joinPoint) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         if (method.getDeclaringClass().isInterface()) {

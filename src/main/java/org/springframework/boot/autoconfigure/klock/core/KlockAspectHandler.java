@@ -21,6 +21,8 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by kl on 2017/12/29.
@@ -39,13 +41,14 @@ public class KlockAspectHandler {
     @Autowired
     private LockInfoProvider lockInfoProvider;
 
-    private ThreadLocal<LockRes> currentThreadLock = new ThreadLocal<>();
+    private final Map<String,LockRes> currentThreadLock = new ConcurrentHashMap<>();
 
 
     @Around(value = "@annotation(klock)")
     public Object around(ProceedingJoinPoint joinPoint, Klock klock) throws Throwable {
         LockInfo lockInfo = lockInfoProvider.get(joinPoint,klock);
-        currentThreadLock.set(new LockRes(lockInfo, false));
+        String curentLock = this.getCurrentLockId(joinPoint,klock);
+        currentThreadLock.put(curentLock,new LockRes(lockInfo, false));
         Lock lock = lockFactory.getLock(lockInfo);
         boolean lockRes = lock.acquire();
 
@@ -66,23 +69,24 @@ public class KlockAspectHandler {
             }
         }
 
-        currentThreadLock.get().setLock(lock);
-        currentThreadLock.get().setRes(true);
+        currentThreadLock.get(curentLock).setLock(lock);
+        currentThreadLock.get(curentLock).setRes(true);
 
         return joinPoint.proceed();
     }
 
     @AfterReturning(value = "@annotation(klock)")
     public void afterReturning(JoinPoint joinPoint, Klock klock) throws Throwable {
-        releaseLock(klock, joinPoint);
-        cleanUpThreadLocal();
+        String curentLock = this.getCurrentLockId(joinPoint,klock);
+        releaseLock(klock, joinPoint,curentLock);
+        cleanUpThreadLocal(curentLock);
     }
 
     @AfterThrowing(value = "@annotation(klock)", throwing = "ex")
     public void afterThrowing (JoinPoint joinPoint, Klock klock, Throwable ex) throws Throwable {
-
-        releaseLock(klock, joinPoint);
-        cleanUpThreadLocal();
+        String curentLock = this.getCurrentLockId(joinPoint,klock);
+        releaseLock(klock, joinPoint,curentLock);
+        cleanUpThreadLocal(curentLock);
         throw ex;
     }
 
@@ -119,10 +123,10 @@ public class KlockAspectHandler {
     /**
      *  释放锁
      */
-    private void releaseLock(Klock klock, JoinPoint joinPoint) throws Throwable {
-        LockRes lockRes = currentThreadLock.get();
+    private void releaseLock(Klock klock, JoinPoint joinPoint,String curentLock) throws Throwable {
+        LockRes lockRes = currentThreadLock.get(curentLock);
         if (lockRes.getRes()) {
-            boolean releaseRes = currentThreadLock.get().getLock().release();
+            boolean releaseRes = currentThreadLock.get(curentLock).getLock().release();
             // avoid release lock twice when exception happens below
             lockRes.setRes(false);
             if (!releaseRes) {
@@ -131,6 +135,22 @@ public class KlockAspectHandler {
         }
     }
 
+    // avoid memory leak
+    private void cleanUpThreadLocal(String curentLock) {
+        currentThreadLock.remove(curentLock);
+    }
+
+    /**
+     * 获取当前锁在map中的key
+     * @param joinPoint
+     * @param klock
+     * @return
+     */
+    private String getCurrentLockId(JoinPoint joinPoint , Klock klock){
+        LockInfo lockInfo = lockInfoProvider.get(joinPoint,klock);
+        String curentLock= Thread.currentThread().getName() + lockInfo.getName();
+        return curentLock;
+    }
 
     /**
      *  处理释放锁时已超时
@@ -212,8 +232,5 @@ public class KlockAspectHandler {
         }
     }
 
-    // avoid memory leak
-    private void cleanUpThreadLocal() {
-        currentThreadLock.remove();
-    }
+
 }
