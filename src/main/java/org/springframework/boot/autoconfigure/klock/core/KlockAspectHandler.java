@@ -22,6 +22,7 @@ import org.springframework.util.StringUtils;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -125,6 +126,9 @@ public class KlockAspectHandler {
      */
     private void releaseLock(Klock klock, JoinPoint joinPoint,String curentLock) throws Throwable {
         LockRes lockRes = currentThreadLock.get(curentLock);
+        if(Objects.isNull(lockRes)){
+            throw new NullPointerException("Please check whether the input parameter used as the lock key value has been modified in the method, which will cause the acquire and release locks to have different key values and throw null pointers.curentLockKey:" + curentLock);
+        }
         if (lockRes.getRes()) {
             boolean releaseRes = currentThreadLock.get(curentLock).getLock().release();
             // avoid release lock twice when exception happens below
