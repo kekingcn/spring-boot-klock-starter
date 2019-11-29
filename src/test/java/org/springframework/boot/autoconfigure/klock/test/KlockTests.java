@@ -84,7 +84,7 @@ public class KlockTests {
 	 */
 	@Test
 	public void businessKeyJvm1()throws Exception{
-		String result=testService.getValue("user1",1);
+		String result=testService.getValue("user1",null);
 		Assert.assertEquals(result,"success");
 	}
 	/**
@@ -108,7 +108,7 @@ public class KlockTests {
 	 */
 	@Test
 	public void businessKeyJvm4()throws Exception{
-		String result=testService.getValue(new User(3,"kl"));
+		String result=testService.getValue(new User(3,null));
 		Assert.assertEquals(result,"success");
 	}
 

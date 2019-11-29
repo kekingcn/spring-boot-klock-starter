@@ -12,6 +12,7 @@ import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
@@ -56,10 +57,10 @@ public class BusinessKeyProvider {
     private List<String> getSpelDefinitionKey(String[] definitionKeys, Method method, Object[] parameterValues) {
         List<String> definitionKeyList = new ArrayList<>();
         for (String definitionKey : definitionKeys) {
-            if (definitionKey != null && !definitionKey.isEmpty()) {
+            if (!ObjectUtils.isEmpty(definitionKey)) {
                 EvaluationContext context = new MethodBasedEvaluationContext(null, method, parameterValues, nameDiscoverer);
-                String key = parser.parseExpression(definitionKey).getValue(context).toString();
-                definitionKeyList.add(key);
+                Object objKey = parser.parseExpression(definitionKey).getValue(context);
+                definitionKeyList.add(ObjectUtils.nullSafeToString(objKey));
             }
         }
         return definitionKeyList;
@@ -71,11 +72,12 @@ public class BusinessKeyProvider {
             if (parameters[i].getAnnotation(KlockKey.class) != null) {
                 KlockKey keyAnnotation = parameters[i].getAnnotation(KlockKey.class);
                 if (keyAnnotation.value().isEmpty()) {
-                    parameterKey.add(parameterValues[i].toString());
+                    Object parameterValue = parameterValues[i];
+                    parameterKey.add(ObjectUtils.nullSafeToString(parameterValue));
                 } else {
                     StandardEvaluationContext context = new StandardEvaluationContext(parameterValues[i]);
-                    String key = parser.parseExpression(keyAnnotation.value()).getValue(context).toString();
-                    parameterKey.add(key);
+                    Object key = parser.parseExpression(keyAnnotation.value()).getValue(context);
+                    parameterKey.add(ObjectUtils.nullSafeToString(key));
                 }
             }
         }
