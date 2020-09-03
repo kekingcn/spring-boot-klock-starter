@@ -5,8 +5,11 @@ package org.springframework.boot.autoconfigure.klock.lock;
  */
 public interface Lock {
 
+    String name = "lock";
+
     boolean acquire();
 
     boolean release();
+
 }
 

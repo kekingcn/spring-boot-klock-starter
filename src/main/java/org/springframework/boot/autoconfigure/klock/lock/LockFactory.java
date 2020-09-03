@@ -31,7 +31,6 @@ public class LockFactory {
                     return new ReadLock(redissonClient, lockInfo);
                 case Write:
                     return new WriteLock(redissonClient, lockInfo);
-
                 default:
                     return new ReentrantLock(redissonClient, lockInfo);
             }

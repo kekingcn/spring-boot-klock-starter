@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
  * 将多个RLock对象关联为一个联锁
  */
 public class MultiLock implements Lock {
+    private String name;
 
     private RedissonMultiLock rLock;
 
@@ -25,10 +26,14 @@ public class MultiLock implements Lock {
         this.lockInfos = lockInfos;
         this.redissonClient = redissonClient;
         RLock[] rLocks = new RLock[lockInfos.size()];
+        StringBuffer nameBuf = new StringBuffer();
         for (int i = 0, length = lockInfos.size(); i < length; i++) {
-            RLock lock = redissonClient.getLock(lockInfos.get(i).getName());
+            name = lockInfos.get(i).getName();
+            RLock lock = redissonClient.getLock(name);
             rLocks[i] = lock;
+            nameBuf.append(name);
         }
+        name = nameBuf.toString();
         this.rLock = new RedissonMultiLock(rLocks);
     }
 
