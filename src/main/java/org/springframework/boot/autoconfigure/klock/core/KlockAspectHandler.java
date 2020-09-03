@@ -48,8 +48,8 @@ public class KlockAspectHandler {
     @Around(value = "@annotation(klock)")
     public Object around(ProceedingJoinPoint joinPoint, Klock klock) throws Throwable {
         LockInfo lockInfo = lockInfoProvider.get(joinPoint,klock);
-        String curentLock = this.getCurrentLockId(joinPoint,klock);
-        currentThreadLock.put(curentLock,new LockRes(lockInfo, false));
+        String currentLock = this.getCurrentLockId(joinPoint,klock);
+        currentThreadLock.put(currentLock,new LockRes(lockInfo, false));
         Lock lock = lockFactory.getLock(lockInfo);
         boolean lockRes = lock.acquire();
 
@@ -70,24 +70,24 @@ public class KlockAspectHandler {
             }
         }
 
-        currentThreadLock.get(curentLock).setLock(lock);
-        currentThreadLock.get(curentLock).setRes(true);
+        currentThreadLock.get(currentLock).setLock(lock);
+        currentThreadLock.get(currentLock).setRes(true);
 
         return joinPoint.proceed();
     }
 
     @AfterReturning(value = "@annotation(klock)")
     public void afterReturning(JoinPoint joinPoint, Klock klock) throws Throwable {
-        String curentLock = this.getCurrentLockId(joinPoint,klock);
-        releaseLock(klock, joinPoint,curentLock);
-        cleanUpThreadLocal(curentLock);
+        String currentLock = this.getCurrentLockId(joinPoint,klock);
+        releaseLock(klock, joinPoint,currentLock);
+        cleanUpThreadLocal(currentLock);
     }
 
     @AfterThrowing(value = "@annotation(klock)", throwing = "ex")
     public void afterThrowing (JoinPoint joinPoint, Klock klock, Throwable ex) throws Throwable {
-        String curentLock = this.getCurrentLockId(joinPoint,klock);
-        releaseLock(klock, joinPoint,curentLock);
-        cleanUpThreadLocal(curentLock);
+        String currentLock = this.getCurrentLockId(joinPoint,klock);
+        releaseLock(klock, joinPoint,currentLock);
+        cleanUpThreadLocal(currentLock);
         throw ex;
     }
 
@@ -124,13 +124,13 @@ public class KlockAspectHandler {
     /**
      *  释放锁
      */
-    private void releaseLock(Klock klock, JoinPoint joinPoint,String curentLock) throws Throwable {
-        LockRes lockRes = currentThreadLock.get(curentLock);
+    private void releaseLock(Klock klock, JoinPoint joinPoint,String currentLock) throws Throwable {
+        LockRes lockRes = currentThreadLock.get(currentLock);
         if(Objects.isNull(lockRes)){
-            throw new NullPointerException("Please check whether the input parameter used as the lock key value has been modified in the method, which will cause the acquire and release locks to have different key values and throw null pointers.curentLockKey:" + curentLock);
+            throw new NullPointerException("Please check whether the input parameter used as the lock key value has been modified in the method, which will cause the acquire and release locks to have different key values and throw null pointers.currentLockKey:" + currentLock);
         }
         if (lockRes.getRes()) {
-            boolean releaseRes = currentThreadLock.get(curentLock).getLock().release();
+            boolean releaseRes = currentThreadLock.get(currentLock).getLock().release();
             // avoid release lock twice when exception happens below
             lockRes.setRes(false);
             if (!releaseRes) {
@@ -140,8 +140,8 @@ public class KlockAspectHandler {
     }
 
     // avoid memory leak
-    private void cleanUpThreadLocal(String curentLock) {
-        currentThreadLock.remove(curentLock);
+    private void cleanUpThreadLocal(String currentLock) {
+        currentThreadLock.remove(currentLock);
     }
 
     /**
@@ -152,8 +152,8 @@ public class KlockAspectHandler {
      */
     private String getCurrentLockId(JoinPoint joinPoint , Klock klock){
         LockInfo lockInfo = lockInfoProvider.get(joinPoint,klock);
-        String curentLock= Thread.currentThread().getId() + lockInfo.getName();
-        return curentLock;
+        String currentLock= Thread.currentThread().getId() + lockInfo.getName();
+        return currentLock;
     }
 
     /**
