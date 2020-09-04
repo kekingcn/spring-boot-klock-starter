@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by kl on 2017/12/29.
  */
-public class ReadLock implements Lock {
+public class ReadLock extends Lock {
 
     private  RReadWriteLock rLock;
 
@@ -26,7 +26,8 @@ public class ReadLock implements Lock {
     @Override
     public boolean acquire() {
         try {
-            rLock=redissonClient.getReadWriteLock(lockInfo.getName());
+            name = lockInfo.getName();
+            rLock=redissonClient.getReadWriteLock(name);
             return rLock.readLock().tryLock(lockInfo.getWaitTime(), lockInfo.getLeaseTime(), TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             return false;

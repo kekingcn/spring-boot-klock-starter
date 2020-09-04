@@ -10,15 +10,15 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by kl on 2017/12/29.
  */
-public class FairLock implements Lock {
+public class FairLock extends Lock {
 
-    private  RLock rLock;
-    
+    private RLock rLock;
+
     private final LockInfo lockInfo;
 
     private RedissonClient redissonClient;
 
-    public FairLock(RedissonClient redissonClient,LockInfo info) {
+    public FairLock(RedissonClient redissonClient, LockInfo info) {
         this.redissonClient = redissonClient;
         this.lockInfo = info;
     }
@@ -26,7 +26,8 @@ public class FairLock implements Lock {
     @Override
     public boolean acquire() {
         try {
-            rLock=redissonClient.getFairLock(lockInfo.getName());
+            name = lockInfo.getName();
+            rLock = redissonClient.getFairLock(name);
             return rLock.tryLock(lockInfo.getWaitTime(), lockInfo.getLeaseTime(), TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             return false;
@@ -35,7 +36,7 @@ public class FairLock implements Lock {
 
     @Override
     public boolean release() {
-        if(rLock.isHeldByCurrentThread()){
+        if (rLock.isHeldByCurrentThread()) {
 
             try {
                 return rLock.forceUnlockAsync().get();

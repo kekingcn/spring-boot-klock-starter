@@ -11,6 +11,10 @@ import org.springframework.boot.autoconfigure.klock.model.LockInfo;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.boot.autoconfigure.klock.model.LockType;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by kl on 2017/12/29.
  */
@@ -28,25 +32,44 @@ public class LockInfoProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(LockInfoProvider.class);
 
-    LockInfo get(JoinPoint joinPoint, Klock klock) {
+    List<LockInfo> get(JoinPoint joinPoint, Klock klock) {
+        List<LockInfo> lockInfos = new ArrayList<>();
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        LockType type= klock.lockType();
-        String businessKeyName=businessKeyProvider.getKeyName(joinPoint,klock);
-        //锁的名字，锁的粒度就是这里控制的
-        String lockName = LOCK_NAME_PREFIX + LOCK_NAME_SEPARATOR + getName(klock.name(), signature) + businessKeyName;
+        LockType type = klock.lockType();
+        Method method = businessKeyProvider.getMethod(joinPoint);
+        List<String> parameterKeys = businessKeyProvider.getParameterKey(method.getParameters(), joinPoint.getArgs());
+
         long waitTime = getWaitTime(klock);
         long leaseTime = getLeaseTime(klock);
-        //如果占用锁的时间设计不合理，则打印相应的警告提示
-        if(leaseTime == -1 && logger.isWarnEnabled()) {
-            logger.warn("Trying to acquire Lock({}) with no expiration, " +
-                        "Klock will keep prolong the lock expiration while the lock is still holding by current thread. " +
-                        "This may cause dead lock in some circumstances.", lockName);
+
+        if (parameterKeys.size() > 0) {
+            parameterKeys.forEach(parameterKey -> {
+                String businessKeyName = businessKeyProvider.getKeyName(joinPoint, klock, parameterKey);
+                //锁的名字，锁的粒度就是这里控制的
+                addLockInfo(klock, lockInfos, signature, type, waitTime, leaseTime, businessKeyName);
+            });
+        } else {
+            String businessKeyName = businessKeyProvider.getKeyName(joinPoint, klock, null);
+            //锁的名字，锁的粒度就是这里控制的
+            addLockInfo(klock, lockInfos, signature, type, waitTime, leaseTime, businessKeyName);
         }
-        return new LockInfo(type,lockName,waitTime,leaseTime);
+
+        return lockInfos;
+    }
+
+    private void addLockInfo(Klock klock, List<LockInfo> lockInfos, MethodSignature signature, LockType type, long waitTime, long leaseTime, String businessKeyName) {
+        String lockName = LOCK_NAME_PREFIX + LOCK_NAME_SEPARATOR + getName(klock.name(), signature) + businessKeyName;
+        if (leaseTime == -1 && logger.isWarnEnabled()) {
+            logger.warn("Trying to acquire Lock({}) with no expiration, " +
+                    "Klock will keep prolong the lock expiration while the lock is still holding by current thread. " +
+                    "This may cause dead lock in some circumstances.", lockName);
+        }
+        lockInfos.add(new LockInfo(type, lockName, waitTime, leaseTime));
     }
 
     /**
      * 获取锁的name，如果没有指定，则按全类名拼接方法名处理
+     *
      * @param annotationName
      * @param signature
      * @return

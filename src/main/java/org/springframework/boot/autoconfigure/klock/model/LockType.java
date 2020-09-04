@@ -20,7 +20,12 @@ public enum LockType {
     /**
      * 写锁
      */
-    Write;
+    Write,
+    /**
+     * 联锁
+     */
+    Multi,
+    ;
 
     LockType() {
     }

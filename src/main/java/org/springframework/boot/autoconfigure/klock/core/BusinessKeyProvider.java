@@ -30,17 +30,18 @@ public class BusinessKeyProvider {
 
     private ExpressionParser parser = new SpelExpressionParser();
 
-    public String getKeyName(JoinPoint joinPoint, Klock klock) {
+    public String getKeyName(JoinPoint joinPoint, Klock klock, String parameterKey) {
         List<String> keyList = new ArrayList<>();
         Method method = getMethod(joinPoint);
         List<String> definitionKeys = getSpelDefinitionKey(klock.keys(), method, joinPoint.getArgs());
         keyList.addAll(definitionKeys);
-        List<String> parameterKeys = getParameterKey(method.getParameters(), joinPoint.getArgs());
-        keyList.addAll(parameterKeys);
-        return StringUtils.collectionToDelimitedString(keyList,"","-","");
+        if(!StringUtils.isEmpty(parameterKey)) {
+            keyList.add(parameterKey);
+        }
+        return StringUtils.collectionToDelimitedString(keyList, "", "-", "");
     }
 
-    private Method getMethod(JoinPoint joinPoint) {
+    public Method getMethod(JoinPoint joinPoint) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         if (method.getDeclaringClass().isInterface()) {
@@ -66,7 +67,7 @@ public class BusinessKeyProvider {
         return definitionKeyList;
     }
 
-    private List<String> getParameterKey(Parameter[] parameters, Object[] parameterValues) {
+    public List<String> getParameterKey(Parameter[] parameters, Object[] parameterValues) {
         List<String> parameterKey = new ArrayList<>();
         for (int i = 0; i < parameters.length; i++) {
             if (parameters[i].getAnnotation(KlockKey.class) != null) {

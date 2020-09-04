@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by kl on 2017/12/29.
  */
-public class ReentrantLock implements Lock {
+public class ReentrantLock extends Lock {
 
     private  RLock rLock;
 
@@ -25,7 +25,8 @@ public class ReentrantLock implements Lock {
     @Override
     public boolean acquire() {
         try {
-            rLock = redissonClient.getLock(lockInfo.getName());
+            name = lockInfo.getName();
+            rLock = redissonClient.getLock(name);
             return rLock.tryLock(lockInfo.getWaitTime(), lockInfo.getLeaseTime(), TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             return false;

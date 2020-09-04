@@ -10,15 +10,15 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by kl on 2017/12/29.
  */
-public class WriteLock implements Lock {
+public class WriteLock extends Lock {
 
-    private  RReadWriteLock rLock;
+    private RReadWriteLock rLock;
 
     private final LockInfo lockInfo;
 
     private RedissonClient redissonClient;
 
-    public WriteLock(RedissonClient redissonClient,LockInfo info) {
+    public WriteLock(RedissonClient redissonClient, LockInfo info) {
         this.redissonClient = redissonClient;
         this.lockInfo = info;
     }
@@ -26,7 +26,8 @@ public class WriteLock implements Lock {
     @Override
     public boolean acquire() {
         try {
-            rLock=redissonClient.getReadWriteLock(lockInfo.getName());
+            name = lockInfo.getName();
+            rLock = redissonClient.getReadWriteLock(name);
             return rLock.writeLock().tryLock(lockInfo.getWaitTime(), lockInfo.getLeaseTime(), TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             return false;
@@ -35,7 +36,7 @@ public class WriteLock implements Lock {
 
     @Override
     public boolean release() {
-        if(rLock.writeLock().isHeldByCurrentThread()){
+        if (rLock.writeLock().isHeldByCurrentThread()) {
             try {
                 return rLock.writeLock().forceUnlockAsync().get();
             } catch (InterruptedException e) {
