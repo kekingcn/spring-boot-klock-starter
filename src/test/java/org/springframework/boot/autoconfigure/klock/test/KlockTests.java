@@ -50,14 +50,12 @@ public class KlockTests {
 
     @Test
     public void multiLockTest() throws Exception {
-        ExecutorService executorService = Executors.newFixedThreadPool(6);
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
         IntStream.range(0, 10).forEach(i -> executorService.submit(() -> {
-            User originUser = new User(1, "xx");
-            User targetUser = new User(9, "tt");
-            testService.updateValue(originUser, targetUser);
-            System.out.println("origin:" + originUser.getId() + ",target:" + targetUser.getId());
+            String updateResult = testService.updateValue(1, 9);
+            System.out.println(updateResult);
         }));
-        executorService.awaitTermination(30, TimeUnit.SECONDS);
+        executorService.awaitTermination(60*5, TimeUnit.SECONDS);
 
     }
 
@@ -129,7 +127,7 @@ public class KlockTests {
      */
     @Test
     public void businessKeyJvm4() throws Exception {
-        String result = testService.getValue(new User(3, null));
+        String result = testService.getValue(new User(3, null,0));
         Assert.assertEquals(result, "success");
     }
 

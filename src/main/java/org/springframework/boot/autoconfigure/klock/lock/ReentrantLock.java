@@ -10,8 +10,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by kl on 2017/12/29.
  */
-public class ReentrantLock implements Lock {
-    private String name;
+public class ReentrantLock extends Lock {
 
     private  RLock rLock;
 

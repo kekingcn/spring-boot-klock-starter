@@ -15,8 +15,10 @@ import org.springframework.boot.autoconfigure.klock.handler.KlockInvocationExcep
 import org.springframework.boot.autoconfigure.klock.lock.Lock;
 import org.springframework.boot.autoconfigure.klock.lock.LockFactory;
 import org.springframework.boot.autoconfigure.klock.model.LockInfo;
+import org.springframework.boot.autoconfigure.klock.model.LockType;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;
@@ -62,7 +64,7 @@ public class KlockAspectHandler {
         //如果获取锁失败了，则进入失败的处理逻辑
         if (!lockRes) {
             if (logger.isWarnEnabled()) {
-                logger.warn("Timeout while acquiring Lock({})", lock.name);
+                logger.warn("Timeout while acquiring Lock({})", lock.getName());
             }
             //如果自定义了获取锁失败的处理策略，则执行自定义的降级处理策略
             if (!StringUtils.isEmpty(klock.customLockTimeoutStrategy())) {
@@ -95,17 +97,30 @@ public class KlockAspectHandler {
         throw ex;
     }
 
+    /**
+     * 释放锁
+     */
     private void releaseLock(JoinPoint joinPoint, Klock klock) {
-        List<LockInfo> lockInfos = lockInfoProvider.get(joinPoint, klock);
-        lockInfos.forEach(lockInfo -> {
-            try {
-                String currentLock = this.getCurrentLockId(lockInfo);
-                releaseLock(klock, joinPoint, currentLock);
-                cleanUpThreadLocal(currentLock);
-            } catch (Throwable throwable) {
-                throw new RuntimeException("release lock fail ", throwable);
+        try {
+            List<LockInfo> lockInfos = lockInfoProvider.get(joinPoint, klock);
+            if (!CollectionUtils.isEmpty(lockInfos)) {
+                if (Objects.equals(klock.lockType(), LockType.Multi)) {
+                    String currentLock = this.getCurrentLockId(lockInfos.get(0));
+                    releaseLock(klock, joinPoint, currentLock);
+                    cleanUpThreadLocal(currentLock);
+                } else {
+                    for (LockInfo lockInfo : lockInfos) {
+                        String currentLock = this.getCurrentLockId(lockInfo);
+                        releaseLock(klock, joinPoint, currentLock);
+                        cleanUpThreadLocal(currentLock);
+                    }
+                    lockInfos.forEach(lockInfo -> {
+                    });
+                }
             }
-        });
+        } catch (Throwable throwable) {
+            throw new RuntimeException("release lock fail ", throwable);
+        }
     }
 
     /**

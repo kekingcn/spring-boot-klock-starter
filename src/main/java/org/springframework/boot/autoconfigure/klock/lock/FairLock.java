@@ -10,9 +10,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by kl on 2017/12/29.
  */
-public class FairLock implements Lock {
-
-    private String name;
+public class FairLock extends Lock {
 
     private RLock rLock;
 

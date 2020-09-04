@@ -10,8 +10,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by kl on 2017/12/29.
  */
-public class ReadLock implements Lock {
-    private String name;
+public class ReadLock extends Lock {
 
     private  RReadWriteLock rLock;
 

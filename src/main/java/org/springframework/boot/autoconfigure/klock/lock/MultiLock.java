@@ -12,8 +12,7 @@ import java.util.concurrent.TimeUnit;
  * 联锁
  * 将多个RLock对象关联为一个联锁
  */
-public class MultiLock implements Lock {
-    private String name;
+public class MultiLock extends Lock {
 
     private RedissonMultiLock rLock;
 
