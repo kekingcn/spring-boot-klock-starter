@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 /**
  *
  * @author kl
- * @date 2017/12/29
+ * @since 2017/12/29
  * Content :加锁注解
  */
 @Target(value = {ElementType.METHOD})

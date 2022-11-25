@@ -14,8 +14,6 @@ public class KlockConfig {
     private String password;
     private int database=15;
     private ClusterServer clusterServer;
-    private String codec = "org.redisson.codec.JsonJacksonCodec";
-    //lock
     private long waitTime = 60;
     private long leaseTime = 60;
 
@@ -33,14 +31,6 @@ public class KlockConfig {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getCodec() {
-        return codec;
-    }
-
-    public void setCodec(String codec) {
-        this.codec = codec;
     }
 
     public long getWaitTime() {

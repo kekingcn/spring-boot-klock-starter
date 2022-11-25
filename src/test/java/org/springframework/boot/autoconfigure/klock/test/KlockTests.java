@@ -39,7 +39,7 @@ public class KlockTests {
 		IntStream.range(0,10).forEach(i-> executorService.submit(() -> {
 			try {
 				String result = testService.getValue("sleep");
-				System.err.println("线程:[" + Thread.currentThread().getName() + "]拿到结果=》" + result + new Date().toLocaleString());
+				System.err.println("线程:[" + Thread.currentThread().getName() + "]拿到结果=》" + result + new Date().toString());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

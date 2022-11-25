@@ -12,12 +12,12 @@
 <dependency>
     <groupId>cn.keking</groupId>
     <artifactId>spring-boot-klock-starter</artifactId>
-    <version>1.4-RELEASE</version>
+    <version>1.5-RELEASE</version>
 </dependency>
 
 ```
 
-2.application.properties配置redis链接：spring.klock.address=127.0.0.1:6379
+2.application.properties配置redis链接：spring.klock.address=redis://127.0.0.1:6379
 
 
 3.在需要加分布式锁的方法上，添加注解@Klock，如：
@@ -53,13 +53,13 @@ public class TestService {
 > 配置参数说明
 
 ```properties
-spring.klock.address  : redis链接地址
+spring.klock.address  : redis链接地址 如 redis://127.0.0.1:6379
 spring.klock.password : redis密码
 spring.klock.database : redis数据索引
 spring.klock.waitTime : 获取锁最长阻塞时间（默认：60，单位：秒）
 spring.klock.leaseTime: 已获取锁后自动释放时间（默认：60，单位：秒）
-spring.klock.cluster-server.node-addresses : redis集群配置 如 127.0.0.1:7000,127.0.0.1:7001，127.0.0.1:7002
-spring.klock.address 和 spring.klock.cluster-server.node-addresses 选其一即可
+spring.klock.cluster-server.node-addresses : redis集群配置 如 redis://127.0.0.1:7000,redis://127.0.0.1:7001,redis://127.0.0.1:7002
+#spring.klock.address 和 spring.klock.cluster-server.node-addresses 选其一即可
 ```
 > @Klock注解参数说明
 ```
@@ -96,7 +96,7 @@ customReleaseTimeoutStrategy: 自定义释放锁时，需指定自定义处理�
 - **FAIL_FAST** 快速失败，会抛出KlockTimeoutException
 - **自定义(customReleaseTimeoutStrategy)** 需指定自定义处理的方法的方法名，并保持入参一致，指定自定义处理方法后，会覆盖上述两种策略, 执行自定义处理方法时，业务逻辑已经执行完毕，会在方法返回前和throw异常前执行。
 
-**希望使用者清楚的意识到，如果没有对加锁超时进行有效的设置，那么设置释放锁时超时处理策略是没有意义的。**
+**希望使用者清楚的意识到，如果没有对加锁超时进行有效设置，那么设置释放锁时超时处理策略是没有意义的。**
 
 *在测试模块中已集成锁超时策略的使用用例*
 # 关于测试

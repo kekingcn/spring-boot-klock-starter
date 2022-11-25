@@ -24,7 +24,7 @@ import org.springframework.util.ClassUtils;
 /**
  *
  * @author kl
- * @date 2017/12/29
+ * @since 2017/12/29
  * Content :klock自动装配
  */
 @Configuration
@@ -49,8 +49,6 @@ public class KlockAutoConfiguration {
                     .setDatabase(klockConfig.getDatabase())
                     .setPassword(klockConfig.getPassword());
         }
-        Codec codec=(Codec) ClassUtils.forName(klockConfig.getCodec(),ClassUtils.getDefaultClassLoader()).newInstance();
-        config.setCodec(codec);
         config.setEventLoopGroup(new NioEventLoopGroup());
         return Redisson.create(config);
     }
